@@ -1,1 +1,28 @@
-register page
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <p>Please Sign Up to join the community</p>
+    <form class="" action="/register" method="post">
+      <label for="name">Name</label>
+      <input type="text" name="name" value="Qasim Ali" placeholder="Your full name">
+
+      <label for="email">Email</label>
+      <input type="email" name="email" value="qasimali24@gmail.com" placeholder="Enter your email here">
+
+      <label for="password">Password</label>
+      <input type="password" name="password" value="123334" placeholder="Enter the password here">
+
+      <label for="password2">Confirm Password</label>
+      <input type="password" name="password2" value="123334" placeholder="Re-enter your password">
+
+      <button type="submit" name="button">Register</button>
+    </form>
+    {{#each errors}}
+    <p>{{this.msg}}</p>
+    {{/each}}
+  </body>
+</html>
