@@ -1,10 +1,12 @@
 var passport = require('passport'),
   LocalStrategy = require('passport-local').Strategy,
   FacebookStrategy = require('passport-facebook').Strategy,
+  TwitterStrategy = require('passport-twitter').Strategy,
   {
     User
   } = require('../models/users'),
-  bcrypt = require('bcryptjs');
+  bcrypt = require('bcryptjs'),
+  request = require('request');
 
 passport.use(new LocalStrategy(
   function(username, password, done) {
@@ -37,30 +39,81 @@ passport.use(new LocalStrategy(
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: "http://localhost:3000/auth/facebook"
+    callbackURL: "http://localhost:3000/auth/facebook/callback",
   },
   function(accessToken, refreshToken, profile, done) {
-    console.log({
-      accessToken,
-      refreshToken,
-      profile
+
+    let url = "https://graph.facebook.com/v3.2/me?" +
+      "fields=id,name,email,first_name,last_name&access_token=" + refreshToken;
+
+    return request({
+      url: url,
+      json: true
+    }, function(err, response, body) {
+
+      if (body.error) {
+        console.log(err);
+        return done(body.error.message);
+      }
+
+      User.findOne({
+        'facebook.id': body.id
+      }, function(err, user) {
+
+        if (err) {
+          console.log(err);
+          return done(err);
+        }
+        //No user was found... so create a new user with values from Facebook (all the profile. stuff)
+        if (!user) {
+          user = new User({
+            name: body.name,
+            email: body.email,
+            username: body.email,
+            provider: 'facebook',
+            //now in the future searching on User.findOne({'facebook.id': profile.id } will match because of this next line
+            facebook: body
+          });
+          user.save(function(err) {
+            if (err) console.log(err);
+            return done(err, user);
+          });
+        } else {
+          //found user. Return
+          return done(err, user);
+        }
+      });
     });
-    // return done(null, profile);
+  }
+));
+
+passport.use(new TwitterStrategy({
+    consumerKey: process.env.TWITTER_CONSUMER_KEY,
+    consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
+    callbackURL: "http://localhost:3000/auth/twitter/callback",
+    userProfileURL: "https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true",
+  },
+  function(token, tokenSecret, body, done) {
+
+    console.log(body);
+
     User.findOne({
-      'facebook.id': profile.id
+      'twitter.id': body.id
     }, function(err, user) {
+
       if (err) {
+        console.log(err);
         return done(err);
       }
       //No user was found... so create a new user with values from Facebook (all the profile. stuff)
       if (!user) {
         user = new User({
-          name: profile.displayName,
-          // email: profile.emails[0].value,
-          username: profile.username,
-          provider: 'facebook',
+          name: body.displayName,
+          email: body.emails[0].value,
+          username: body.username,
+          provider: 'twitter',
           //now in the future searching on User.findOne({'facebook.id': profile.id } will match because of this next line
-          facebook: profile._json
+          twitter: body
         });
         user.save(function(err) {
           if (err) console.log(err);

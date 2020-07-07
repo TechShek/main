@@ -13,13 +13,10 @@ var UsersSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    required: true,
     minlength: 3,
-    unique: true
   },
   password: {
     type: String,
-    required: true
   },
   provider: {
     type: String
@@ -27,6 +24,9 @@ var UsersSchema = new mongoose.Schema({
   facebook: {
     type: Object
   },
+  twitter: {
+    type: Object
+  }
 });
 
 

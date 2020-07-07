@@ -11,9 +11,15 @@ const flash = require('connect-flash');
 const bcrypt = require('bcryptjs');
 var cookieParser = require('cookie-parser')
 
-const {mongoose} = require('./db/mongoose');
-const {passport} = require('./config/passport');
-const {User} = require('./models/users');
+const {
+  mongoose
+} = require('./db/mongoose');
+const {
+  passport
+} = require('./config/passport');
+const {
+  User
+} = require('./models/users');
 
 // CONFIG ===========
 
@@ -70,7 +76,7 @@ hbs.registerHelper("inc", function(value, options) {
 
 // authenticate ===========
 
-let authenticate = function(req,res,next) {
+let authenticate = function(req, res, next) {
   if (req.isAuthenticated()) {
     return next();
   }
@@ -82,7 +88,34 @@ let authenticate = function(req,res,next) {
 
 app.get('/', (req, res) => {
   console.log(req.user);
-  res.render('index.hbs',{user: req.user});
+  let data = [{
+      event: 'Meeting with Sana Nadeem',
+      host: 'Qasim Ali',
+      invitees: [{
+          name: 'Sana Nadeem',
+          details: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+        },
+        {
+          name: 'Ahmed Ali',
+          details: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+        }
+      ],
+      time: '1000 hrs to 1100 hrs Pakistan Standard Time',
+      status: 'Completed',
+      summary: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+    },
+    {
+      event: 'Meeting with Akash',
+      host: 'Qasim Ali',
+      invitees: [{
+        name: 'Akash',
+        details: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
+      }]
+    }
+  ]
+  res.render('index.hbs', {
+    data: data
+  });
 })
 
 app.get('/login', (req, res) => {
@@ -182,15 +215,46 @@ app.post('/register', (req, res) => {
 
 app.get('/auth/facebook',
   passport.authenticate('facebook', {
-    scope: 'email',
     successRedirect: '/home',
-    failureRedirect: '/login'
+    failureRedirect: '/login',
+    failureFlash: true
   }));
+
+app.get('/auth/facebook/callback',
+  passport.authenticate('facebook', {
+    failureRedirect: '/login',
+    failureFlash: true
+  }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/home');
+  });
+
+// FACEBOOK LOGIN ROUTE ==========
+
+app.get('/auth/twitter',
+  passport.authenticate('twitter', {
+    successRedirect: '/home',
+    failureRedirect: '/login',
+    failureFlash: true
+  }));
+
+app.get('/auth/twitter/callback',
+  passport.authenticate('twitter', {
+    failureRedirect: '/login',
+    failureFlash: true
+  }),
+  function(req, res) {
+    // Successful authentication, redirect home.
+    res.redirect('/home');
+  });
 
 // NORMAL ROUTES ============
 
-app.get('/home', authenticate, (req,res) => {
-  res.render('home', {name: req.user.name})
+app.get('/home', authenticate, (req, res) => {
+  res.render('home', {
+    name: req.user.name
+  })
 })
 
 app.get('/logout', (req, res) => {
