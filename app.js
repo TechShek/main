@@ -220,16 +220,6 @@ app.get('/auth/facebook',
     failureFlash: true
   }));
 
-app.get('/auth/facebook/callback',
-  passport.authenticate('facebook', {
-    failureRedirect: '/login',
-    failureFlash: true
-  }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/home');
-  });
-
 // FACEBOOK LOGIN ROUTE ==========
 
 app.get('/auth/twitter',
@@ -239,15 +229,15 @@ app.get('/auth/twitter',
     failureFlash: true
   }));
 
-app.get('/auth/twitter/callback',
-  passport.authenticate('twitter', {
-    failureRedirect: '/login',
-    failureFlash: true
-  }),
-  function(req, res) {
-    // Successful authentication, redirect home.
-    res.redirect('/home');
-  });
+// app.get('/auth/twitter/callback',
+//   passport.authenticate('twitter', {
+//     failureRedirect: '/login',
+//     failureFlash: true
+//   }),
+//   function(req, res) {
+//     // Successful authentication, redirect home.
+//     res.redirect('/home');
+//   });
 
 // NORMAL ROUTES ============
 

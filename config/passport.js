@@ -39,7 +39,7 @@ passport.use(new LocalStrategy(
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: "http://localhost:3000/auth/facebook/callback",
+    callbackURL: "http://localhost:3000/auth/facebook",
   },
   function(accessToken, refreshToken, profile, done) {
 
@@ -90,7 +90,7 @@ passport.use(new FacebookStrategy({
 passport.use(new TwitterStrategy({
     consumerKey: process.env.TWITTER_CONSUMER_KEY,
     consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
-    callbackURL: "http://localhost:3000/auth/twitter/callback",
+    callbackURL: "http://localhost:3000/auth/twitter",
     userProfileURL: "https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true",
   },
   function(token, tokenSecret, body, done) {
