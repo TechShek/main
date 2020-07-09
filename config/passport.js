@@ -22,8 +22,10 @@ passport.use(new LocalStrategy(
         });
       }
       // Match password
+      if (!user.password) return done(null, false, {message: `You have already signed up using social media login.`})
       bcrypt.compare(password, user.password, (err, isMatch) => {
-        if (err) throw err;
+        console.log(err);
+        if (err) return done(null, false, {message: 'Something wrong.'});
         if (isMatch) {
           return done(null, user);
         } else {
@@ -39,12 +41,12 @@ passport.use(new LocalStrategy(
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: "http://localhost:3000/auth/facebook",
+    callbackURL: process.env.URL_LINK+"/auth/facebook/callback",
   },
   function(accessToken, refreshToken, profile, done) {
 
     let url = "https://graph.facebook.com/v3.2/me?" +
-      "fields=id,name,email,first_name,last_name&access_token=" + refreshToken;
+      "fields=id,name,email,first_name,last_name,picture&access_token=" + accessToken;
 
     return request({
       url: url,
@@ -90,7 +92,7 @@ passport.use(new FacebookStrategy({
 passport.use(new TwitterStrategy({
     consumerKey: process.env.TWITTER_CONSUMER_KEY,
     consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
-    callbackURL: "http://localhost:3000/auth/twitter",
+    callbackURL: process.env.URL_LINK+"/auth/twitter/callback", 
     userProfileURL: "https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true",
   },
   function(token, tokenSecret, body, done) {
