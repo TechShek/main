@@ -2,8 +2,7 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title></title>
-
+    <title>Edit Profile</title>
     {{> headers}}
   </head>
   <body>
@@ -11,13 +10,21 @@
       {{> navbar}}
     </nav>
     <div class="container">
-      <p>Please Sign Up to join the community</p>
-      <form class="" action="/register" method="post">
+      <form class="" action="/edit_profile" method="post">
+
+        <label for="img">Image URL</label>
+        <input type="text" name="img" value="{{user.picture}}">
+
+        Or
+
+        <label for="img_upload">Upload Image</label>
+        <input type="file" name="img_upload" value="">
+
         <label for="name">Name</label>
-        <input type="text" name="name" value="Qasim Ali" placeholder="Your full name">
+        <input type="text" name="name" value="{{user.name}}">
 
         <label for="email">Email</label>
-        <input type="email" name="email" value="qasimali24@gmail.com" placeholder="Enter your email here">
+        <input type="email" name="email" value="{{user.email}}">
 
         <label for="password">Password</label>
         <input type="password" name="password" value="123334" placeholder="Enter the password here">
@@ -25,11 +32,8 @@
         <label for="password2">Confirm Password</label>
         <input type="password" name="password2" value="123334" placeholder="Re-enter your password">
 
-        <button type="submit" name="button">Register</button>
+        <button type="submit" name="button">Submit</button>
       </form>
-      {{#each errors}}
-      <p>{{this.msg}}</p>
-      {{/each}}
     </div>
   </body>
 </html>

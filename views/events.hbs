@@ -2,9 +2,29 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>Events</title>
+    {{>headers}}
   </head>
   <body>
-    hello world
+    <nav>
+      {{>navbar}}
+    </nav>
+    <div class="container">
+      {{#each val}}
+        <div class="card">
+          <h1>{{inc @index}} - {{this.summary}}</h1>
+          <p>Start - {{this.start.dateTime}}</p>
+          <p>Ends - {{this.end.dateTime}}</p>
+          <p>Location - {{this.location}}</p>
+          <p>organizer - {{this.organizer.email}}</p>
+          <p>attendees</p>
+          <p>{{{break this.attendees}}}</p>
+          <p>Description - {{{this.description}}}</p>
+        </div>
+      {{/each}}
+      <a href="/events?date={{val.[0].start.dateTime}}">Prev</a>
+      <a href="/events?date={{val.[9].start.dateTime}}">Next</a>
+    </div>
+
   </body>
 </html>

@@ -3,9 +3,16 @@
   <head>
     <meta charset="utf-8">
     <title>Home</title>
+
+    {{> headers}}
   </head>
   <body>
-    <p>Hi {{name}}, Welcome to Techshek.</p>
-    <a href="/logout">Log Out</a>
+    <nav>
+      {{> navbar}}
+    </nav>
+    <div class="container">
+      <p>Hi {{name}}, Welcome to Techshek.</p>
+      <a href="/logout">Log Out</a>
+    </div>
   </body>
 </html>

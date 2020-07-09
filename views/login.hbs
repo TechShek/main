@@ -3,20 +3,28 @@
   <head>
     <meta charset="utf-8">
     <title></title>
+    {{> headers}}
   </head>
   <body>
-    <h1>Log In</h1>
-    <p>{{error}}</p>
-    <p>{{error_msg}}</p>
-    <p>{{success_msg}}</p>
-    <form class="" action="/login" method="post">
-      <label for="username">Email</label>
-      <input type="email" name="username" value="" placeholder="Your email address">
+    <nav>
+      {{> navbar}}
+    </nav>
+    <div class="container">
+      <h1>Log In</h1>
+      <p>{{error}}</p>
+      <p>{{error_msg}}</p>
+      <p>{{success_msg}}</p>
+      <form class="" action="/login" method="post">
+        <label for="username">Email</label>
+        <input type="email" name="username" value="" placeholder="Your email address">
 
-      <label for="password">Password</label>
-      <input type="password" name="password" value="" placeholder="enter your password here">
+        <label for="password">Password</label>
+        <input type="password" name="password" value="" placeholder="enter your password here">
 
-      <button type="submit" name="button">Log In</button>
-    </form>
+        <button type="submit" name="button">Log In</button>
+      </form>
+      <p><a href="/auth/facebook">Log In with facebook</a></p>
+      <p><a href="/auth/twitter">Log In with twitter</a></p>
+    </div>
   </body>
 </html>

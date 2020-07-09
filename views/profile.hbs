@@ -2,7 +2,8 @@
 <html lang="en" dir="ltr">
   <head>
     <meta charset="utf-8">
-    <title></title>
+    <title>Profile</title>
+
     {{> headers}}
   </head>
   <body>
@@ -10,9 +11,11 @@
       {{> navbar}}
     </nav>
     <div class="container">
-      <p>Welcome to techshek</p>
-      <a href="/login">Login</a>
-      <a href="/register">Sign up</a>
+      <img src="{{user.picture}}" alt="">
+      <p>{{user.name}}</p>
+      <p>{{user.email}}</p>
+      <p>{{user.intro}}</p>
+      <a href="/edit_profile">Edit Profile</a>
     </div>
   </body>
 </html>

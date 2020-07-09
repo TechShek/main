@@ -12,6 +12,9 @@ const bcrypt = require('bcryptjs');
 var cookieParser = require('cookie-parser')
 
 const {
+  calendar
+} = require('./config/calendar')
+const {
   mongoose
 } = require('./db/mongoose');
 const {
@@ -20,6 +23,8 @@ const {
 const {
   User
 } = require('./models/users');
+
+
 
 // CONFIG ===========
 
@@ -73,6 +78,14 @@ hbs.registerPartials(__dirname + '/views/partials');
 hbs.registerHelper("inc", function(value, options) {
   return parseInt(value) + 1;
 });
+
+hbs.registerHelper("break", function(value, options) {
+  console.log(value);
+  return value.reduce((total, val) => {
+    total = total + ' ' + val.email + ' | ' + val.responseStatus + ' <br> ';
+    return total;
+  }, '');
+})
 
 // authenticate ===========
 
@@ -246,9 +259,39 @@ app.get('/auth/twitter/callback',
 // NORMAL ROUTES ============
 
 app.get('/home', authenticate, (req, res) => {
-  res.render('home', {
+  res.render('home.hbs', {
     name: req.user.name
   })
+})
+
+app.get('/events', authenticate, (req, res) => {
+  calendar({
+      date: '1 Jan 2020',
+      maxResults: 10
+    })
+    .then(val => res.render('events.hbs', {
+      val
+    }))
+    .catch(e => console.log(e));
+})
+
+app.get('/profile', authenticate, (req, res) => {
+
+  req.user.picture = req.user.facebook && req.user.facebook.picture.data.url || req.user.twitter && req.user.twitter.photos[0].value || '';
+  res.render('profile.hbs', {
+    user: req.user
+  })
+})
+
+app.get('/edit_profile', authenticate, (req, res) => {
+  req.user.picture = req.user.facebook && req.user.facebook.picture.data.url || req.user.twitter && req.user.twitter.photos[0].value || '';
+  res.render('edit_profile.hbs', {
+    user: req.user
+  })
+})
+
+app.post('/edit_profile', authenticate, (req, res) => {
+  console.log(req.body);
 })
 
 app.get('/logout', (req, res) => {
@@ -258,7 +301,6 @@ app.get('/logout', (req, res) => {
 });
 
 var port = process.env.PORT || 3000;
-
 
 app.set('port', process.env.PORT || 3000);
 var server = http.createServer(app);
