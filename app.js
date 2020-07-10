@@ -91,6 +91,7 @@ hbs.registerHelper("inc", function(value, options) {
 
 hbs.registerHelper("break", function(value, options) {
   console.log(value);
+  if (!value) return '';
   return value.reduce((total, val) => {
     total = total + ' ' + val.email + ' | ' + val.responseStatus + ' <br> ';
     return total;
@@ -275,10 +276,7 @@ app.get('/home', authenticate, (req, res) => {
 })
 
 app.get('/events', authenticate, (req, res) => {
-  calendar({
-      date: '1 Jan 2020',
-      maxResults: 10
-    })
+  Events.find()
     .then(val => res.render('events.hbs', {
       val
     }))
@@ -306,13 +304,11 @@ app.get('/fetch_events', authenticate, (req, res) => {
   }).then(val => {
     console.log((new Date('1 Jan 2020')).toISOString());
     if (!val) return calendar({
-      date: (new Date('1 Jan 2020')).toISOString(),
-      maxResults: 5
+      date: (new Date('1 Jan 2020')).toISOString()
     })
     console.log((new Date(val.event.start.dateTime)).toISOString());
     return calendar({
-      date: (new Date(val.event.start.dateTime)).toISOString(),
-      maxResults: 5
+      date: (new Date(val.event.start.dateTime)).toISOString()
     })
   }).then(val => {
     res.status(200).send(val);
