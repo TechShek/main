@@ -58,9 +58,10 @@ let calendar = (query) => {
         version: 'v3',
         auth
       });
+      console.log('----------', query.date);
       calendar.events.list({
         calendarId: 'primary',
-        timeMin: (new Date(query.date)).toISOString(),
+        timeMin: (query.date),
         maxResults: query.maxResults,
         singleEvents: true,
         orderBy: 'startTime',
@@ -68,7 +69,6 @@ let calendar = (query) => {
         if (err) return reject(err);
         const events = res.data.items;
         if (events.length) {
-          // console.log(events);
           resolve(events);
           // return events;
         } else {

@@ -23,6 +23,9 @@ const {
 const {
   User
 } = require('./models/users');
+const {
+  Events
+} = require('./models/events');
 
 
 
@@ -32,6 +35,13 @@ var app = express();
 var port = process.env.PORT || 3000;
 
 app.use(express.static(__dirname + 'public'));
+app.use(bodyParser.json({
+  parameterLimit: '1000000'
+}));
+app.use(bodyParser.urlencoded({
+  parameterLimit: '1000000',
+  extended: true
+}));
 app.use(cookieParser());
 app.use(bodyParser.json({
   limit: '50mb'
@@ -275,6 +285,63 @@ app.get('/events', authenticate, (req, res) => {
     .catch(e => console.log(e));
 })
 
+app.get('/admin', authenticate, (req, res) => {
+  Events.find().then(val => {
+      res.render('admin.hbs', {
+        events: val
+      })
+    })
+    .catch(e => {
+      res.render('error.hbs', {
+        error: e
+      })
+    })
+})
+
+app.get('/fetch_events', authenticate, (req, res) => {
+  Events.findOne({}, {}, {
+    sort: {
+      'created_at': -1
+    }
+  }).then(val => {
+    console.log((new Date('1 Jan 2020')).toISOString());
+    if (!val) return calendar({
+      date: (new Date('1 Jan 2020')).toISOString(),
+      maxResults: 5
+    })
+    console.log(val.event.start.dateTime);
+    return calendar({
+      date: (new Date(val.event.start.dateTime)).toISOString(),
+      maxResults: 5
+    })
+  }).then(val => {
+    res.status(200).send(val);
+  }).catch(e => {
+    console.log(e);
+    res.status(400).send(e);
+  });
+})
+
+app.post('/save_events', authenticate, (req, res) => {
+  req.body.data.map(val => console.log(val.id));
+  Promise.all(req.body.data.map(val => Events.findOneAndUpdate({
+    "event.id": val.id
+  }, {
+    event: val
+  }, {
+    upsert: true,
+    new: true
+  }))).then(val => {
+    console.log(val);
+    res.status(200).send(val);
+  }).catch(e => res.status(400).send(e));
+  // Events.insertMany(req.body.data).then(val => res.status(200).send(val)).catch(e => res.status(400).send(e));
+})
+
+app.post('/wash_events', authenticate, (req, res) => {
+  Events.remove({}).then(val => res.status(200).send(val)).catch(e => res.status(400).send(e));
+})
+
 app.get('/profile', authenticate, (req, res) => {
 
   req.user.picture = req.user.facebook && req.user.facebook.picture.data.url || req.user.twitter && req.user.twitter.photos[0].value || '';
@@ -292,6 +359,12 @@ app.get('/edit_profile', authenticate, (req, res) => {
 
 app.post('/edit_profile', authenticate, (req, res) => {
   console.log(req.body);
+})
+
+app.get('/discussions', authenticate, (req, res) => {
+  res.render('discussions.hbs', {
+    user: req.user
+  })
 })
 
 app.get('/logout', (req, res) => {
