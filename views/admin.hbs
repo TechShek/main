@@ -16,6 +16,9 @@
     <p>Step 1</p>
     <p>Fetch items from google calendar</p>
     <button id="fetch_events" type="button" name="button" onclick="fetch_events()">Fetch new events</button>
+    <div id="fetched_events">
+
+    </div>
 
     <p>Step 2</p>
     <p>Update these items in local database</p>
@@ -42,7 +45,9 @@
       $('#fetch_events').html('Fetching...')
       $.get('/fetch_events', function(data, res) {
         console.log(data, res);
+        if (data.length < 2) return $('#fetch_events').html('No new entries found.');
         $('#fetch_events').html(res + ' ' + data.length + ' new entries found. Do you want me to add them in database?');
+        data.map(val => $('#fetched_events').append('<p>'+val.summary+'</p>'));
         $('#save_events').data({
           res: data
         });
@@ -57,7 +62,8 @@
           data: $('#save_events').data().res
         }).done(function(res) {
           console.log(res);
-          $('#save_events').html(res + ' ' + res.length + ' new entries found. Do you want me to add them in database?');
+          $('#save_events').html(res.length + ' new entries added in local database.');
+          window.location.assign('/admin');
         })
         .fail(function(err) {
           console.log(err);
@@ -69,6 +75,7 @@
       $.post('/wash_events').done(function(res) {
         console.log(res);
         $('#wash_events').html(JSON.stringify(res));
+        window.location.assign('/admin');
       }).fail(function(err) {
         console.log(err);
         $('#wash_events').html(err);

@@ -301,7 +301,7 @@ app.get('/admin', authenticate, (req, res) => {
 app.get('/fetch_events', authenticate, (req, res) => {
   Events.findOne({}, {}, {
     sort: {
-      'created_at': -1
+      "event.start.dateTime": -1
     }
   }).then(val => {
     console.log((new Date('1 Jan 2020')).toISOString());
@@ -309,7 +309,7 @@ app.get('/fetch_events', authenticate, (req, res) => {
       date: (new Date('1 Jan 2020')).toISOString(),
       maxResults: 5
     })
-    console.log(val.event.start.dateTime);
+    console.log((new Date(val.event.start.dateTime)).toISOString());
     return calendar({
       date: (new Date(val.event.start.dateTime)).toISOString(),
       maxResults: 5
