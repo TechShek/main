@@ -6,17 +6,7 @@
     {{> headers}}
 
     <style media="screen">
-      .container {
-        display: flex;
-      }
-      .sidebar {
-        width: 200px;
-        border: 1px solid red;
-        display: inline-block;
-      }
-      .threads {
-        width:
-      }
+
     </style>
   </head>
   <body>
@@ -25,15 +15,26 @@
     </nav>
 
     <div class="container">
-      <div class="sidebar">
+      <p>{{success_msg}}</p>
+      <p>{{error_msg}}</p>
+      <div class="header">
+        <h1>Discussions</h1>
+        <p>Try to keep it sober, easier and accessible.</p>
+        <a href="/newtopic">Create a Topic</a>
+      </div>
 
-      </div>
-      <div class="threads">
-        <div class="card">
-          <h1>How are you Qasim</h1>
-          <p>It has been a long journey since we started running this path. I am excited and nervous. two things at one time. Let us see what happens when something bad happens.</p>
+      {{#each topics}}
+      <div class="card">
+        <h1>{{inc @index}} - {{this.topic.heading}}</h1>
+        <div class="">
+          {{{this.topic.post}}}
         </div>
+        {{#if (match this.topic.user ../user._id)}}
+        <a href="/edittopic?id={{this.topic.id}}">Edit</a>
+        <a href="/deletetopic?id={{this.topic.id}}">Delete</a>
+        {{/if}}
       </div>
+      {{/each}}
     </div>
   </body>
 </html>

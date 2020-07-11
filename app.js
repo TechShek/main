@@ -26,6 +26,9 @@ const {
 const {
   Events
 } = require('./models/events');
+const {
+  Topics
+} = require('./models/topics');
 
 
 
@@ -97,6 +100,11 @@ hbs.registerHelper("break", function(value, options) {
     return total;
   }, '');
 })
+
+hbs.registerHelper("match", function(value1, value2, options) {
+  if (!value1 || !value2) return false;
+  return value1.toString() == value2.toString();
+});
 
 // authenticate ===========
 
@@ -283,10 +291,128 @@ app.get('/events', authenticate, (req, res) => {
     .catch(e => console.log(e));
 })
 
+app.get('/newtopic', authenticate, (req, res) => {
+  res.render('newtopic.hbs', {
+    user: req.user,
+    id: new Date().getTime(),
+  })
+})
+
+app.post('/newtopic', authenticate, (req, res) => {
+  if (req.body.heading == '' || req.body.post == '') return res.status(200).render('newtopic.hbs', {
+    user: req.user,
+    error: 'Please fill in all the fields to make this request',
+    heading: req.body.heading,
+    post: req.body.post
+  })
+  console.log(req.body);
+  Topics.findOneAndUpdate({
+      "topic.id": req.body.id
+    }, {
+      topic: {
+        id: req.body.id,
+        user: req.user._id,
+        heading: req.body.heading,
+        post: req.body.post
+      }
+    }, {
+      upsert: true,
+      new: true
+    }).then(val => res.redirect('/discussions'))
+    .catch(e => {
+      return res.status(200).render('newtopic.hbs', {
+        user: req.user,
+        error: e,
+        heading: req.body.heading,
+        post: req.body.post
+      })
+    })
+})
+
+app.get('/edittopic', authenticate, (req, res) => {
+  Topics.findOne({
+    'topic.id': req.query.id,
+    'topic.user': req.user._id
+  }).then(val => {
+    if (!val) return Promise.reject('This topic is broken');
+    return res.render('newtopic.hbs', {
+      user: req.user,
+      id: req.query.id,
+      heading: val.topic.heading,
+      post: val.topic.post
+    })
+  }).catch(e => res.render('error.hbs', {
+    error: e
+  }))
+})
+
+app.get('/deletetopic', authenticate, (req, res) => {
+  Topics.deleteOne({
+    'topic.id': req.query.id,
+    'topic.user': req.user._id
+  }).then(val => {
+    if (val.n == 0) {
+      req.flash('error_msg', 'This topic is broken. Contact admin.');
+      return res.redirect('/discussions');
+    };
+    console.log(val);
+    req.flash('success_msg', 'Topic successfully deleted.');
+    return res.redirect('/discussions');
+  }).catch(e => res.render('error.hbs', {
+    error: e
+  }))
+})
+
+app.get('/profile', authenticate, (req, res) => {
+
+  req.user.picture = req.user.facebook && req.user.facebook.picture.data.url || req.user.twitter && req.user.twitter.photos[0].value || '';
+  res.render('profile.hbs', {
+    user: req.user
+  })
+})
+
+app.get('/edit_profile', authenticate, (req, res) => {
+  req.user.picture = req.user.facebook && req.user.facebook.picture.data.url || req.user.twitter && req.user.twitter.photos[0].value || '';
+  res.render('edit_profile.hbs', {
+    user: req.user
+  })
+})
+
+app.post('/edit_profile', authenticate, (req, res) => {
+  console.log(req.body);
+})
+
+app.get('/discussions', authenticate, (req, res) => {
+  Topics.find().then(val => {
+    return res.render('discussions.hbs', {
+      user: req.user,
+      topics: val
+    })
+  }).catch(e => res.render('discussions.hbs', {
+    user: req.user,
+    error: e
+  }))
+
+})
+
+app.get('/logout', (req, res) => {
+  req.logout();
+  req.flash('success_msg', 'You are logged out');
+  res.redirect('/');
+});
+
+// AdmIN Level operations
+
 app.get('/admin', authenticate, (req, res) => {
-  Events.find().then(val => {
-      res.render('admin.hbs', {
-        events: val
+  Promise.all([
+      Events.find(),
+      Topics.find()
+    ])
+    .then(val => {
+      console.log(val[1]);
+      return res.render('admin.hbs', {
+        events: val[0],
+        topics: val[1]
       })
     })
     .catch(e => {
@@ -338,36 +464,19 @@ app.post('/wash_events', authenticate, (req, res) => {
   Events.remove({}).then(val => res.status(200).send(val)).catch(e => res.status(400).send(e));
 })
 
-app.get('/profile', authenticate, (req, res) => {
-
-  req.user.picture = req.user.facebook && req.user.facebook.picture.data.url || req.user.twitter && req.user.twitter.photos[0].value || '';
-  res.render('profile.hbs', {
-    user: req.user
-  })
+app.get('/deleteTopicSuper', authenticate, (req,res) => {
+Topics.deleteOne({
+  "_id": req.query.id,
+}).then(val => {
+  console.log(val);
+  if (val.n == 0) return Promise.reject('Failed to delete this topic');
+  req.flash('success_msg','successfully deleted this topic');
+  return res.redirect('/admin');
+}).catch(e => {
+  req.flash('error_msg',JSON.stringify(e));
+  return res.redirect('/admin');
 })
-
-app.get('/edit_profile', authenticate, (req, res) => {
-  req.user.picture = req.user.facebook && req.user.facebook.picture.data.url || req.user.twitter && req.user.twitter.photos[0].value || '';
-  res.render('edit_profile.hbs', {
-    user: req.user
-  })
 })
-
-app.post('/edit_profile', authenticate, (req, res) => {
-  console.log(req.body);
-})
-
-app.get('/discussions', authenticate, (req, res) => {
-  res.render('discussions.hbs', {
-    user: req.user
-  })
-})
-
-app.get('/logout', (req, res) => {
-  req.logout();
-  req.flash('success_msg', 'You are logged out');
-  res.redirect('/');
-});
 
 var port = process.env.PORT || 3000;
 
