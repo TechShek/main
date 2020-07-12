@@ -73,6 +73,7 @@ passport.use(new FacebookStrategy({
             email: body.email,
             username: body.email,
             provider: 'facebook',
+            picture: body.picture.data.url,
             //now in the future searching on User.findOne({'facebook.id': profile.id } will match because of this next line
             facebook: body
           });
@@ -92,7 +93,7 @@ passport.use(new FacebookStrategy({
 passport.use(new TwitterStrategy({
     consumerKey: process.env.TWITTER_CONSUMER_KEY,
     consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
-    callbackURL: process.env.URL_LINK+"/auth/twitter/callback", 
+    callbackURL: process.env.URL_LINK+"/auth/twitter/callback",
     userProfileURL: "https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true",
   },
   function(token, tokenSecret, body, done) {
@@ -111,9 +112,10 @@ passport.use(new TwitterStrategy({
       if (!user) {
         user = new User({
           name: body.displayName,
-          email: body.emails[0].value,
+          email: body.emails && body.emails[0].value || '',
           username: body.username,
           provider: 'twitter',
+          picture: body.photos[0].value,
           //now in the future searching on User.findOne({'facebook.id': profile.id } will match because of this next line
           twitter: body
         });

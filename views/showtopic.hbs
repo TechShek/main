@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title>Topic</title>
+    {{> headers}}
+  </head>
+  <body>
+    <nav>
+      {{> navbar}}
+    </nav>
+
+    <div class="container">
+      <h1>{{data.topic.heading}}</h1>
+      <div class="">
+        {{{data.topic.post}}}
+      </div>
+      <p>by {{user.name}}</p>
+      <p>created on {{data.created}}</p>
+
+      {{#if (match data.topic.user user._id)}}
+      <a href="/edittopic?id={{data.topic.id}}">Edit</a>
+      <a href="/deletetopic?id={{data.topic.id}}">Delete</a>
+      {{/if}}
+    </div>
+  </body>
+</html>

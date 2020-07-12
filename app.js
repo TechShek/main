@@ -29,6 +29,9 @@ const {
 const {
   Topics
 } = require('./models/topics');
+const {
+  uploadCloudinary
+} = require('./config/cloudinary');
 
 
 
@@ -93,7 +96,6 @@ hbs.registerHelper("inc", function(value, options) {
 });
 
 hbs.registerHelper("break", function(value, options) {
-  console.log(value);
   if (!value) return '';
   return value.reduce((total, val) => {
     total = total + ' ' + val.email + ' | ' + val.responseStatus + ' <br> ';
@@ -102,8 +104,27 @@ hbs.registerHelper("break", function(value, options) {
 })
 
 hbs.registerHelper("match", function(value1, value2, options) {
+  console.log({value1,value2});
   if (!value1 || !value2) return false;
   return value1.toString() == value2.toString();
+});
+
+hbs.registerHelper("add", function(value1, value2, options) {
+  return Number(value1) + Number(value2);
+});
+
+hbs.registerHelper("sub", function(value1, value2, options) {
+  if (value1 < value2) return 0;
+  return Number(value2) - Number(value1);
+});
+
+hbs.registerHelper("moreThan", function(value1, value2, options) {
+  console.log({
+    value1,
+    value2
+  });
+  console.log(Number(value1) > Number(value2));
+  return Number(value1) > Number(value2);
 });
 
 // authenticate ===========
@@ -231,7 +252,7 @@ app.post('/register', (req, res) => {
               .then(user => {
                 req.flash(
                   'success_msg',
-                  `Thanks ${user.name} your account has been created. Please log in to explore Techshek.`
+                  `Thanks ${user.name} your account has been created.`
                 );
                 res.redirect('/login');
               })
@@ -284,11 +305,22 @@ app.get('/home', authenticate, (req, res) => {
 })
 
 app.get('/events', authenticate, (req, res) => {
-  Events.find()
-    .then(val => res.render('events.hbs', {
-      val
-    }))
-    .catch(e => console.log(e));
+  let skip = Math.abs(req.query.skip) || 0;
+  Promise.all([
+      Events.find({}).skip(skip).limit(10),
+      Events.count({})
+    ])
+    .then(val => {
+      res.render('events.hbs', {
+        val: val[0],
+        skip: skip,
+        count: val[1],
+      })
+    })
+    .catch(e => {
+      req.flash('error_msg', e);
+      return res.redirect('/error.hbs');
+    });
 })
 
 app.get('/newtopic', authenticate, (req, res) => {
@@ -363,23 +395,95 @@ app.get('/deletetopic', authenticate, (req, res) => {
   }))
 })
 
-app.get('/profile', authenticate, (req, res) => {
+app.get('/showtopic', authenticate, (req,res) => {
+  Topics.findOne({"topic.id": req.query.id}).lean()
+  .then(val => {
+    req.topic = val;
+    req.topic.created = new Date(Number(val.topic.id)).toString();
+    return User.findOne({_id: val.topic.user})
+  })
+  .then(val => res.status(200).render('showtopic',{
+    data: req.topic,
+    user: val
+  }))
+  .catch(e => res.status(200).render('error.hbs', {
+    error: e
+  }))
+})
 
-  req.user.picture = req.user.facebook && req.user.facebook.picture.data.url || req.user.twitter && req.user.twitter.photos[0].value || '';
+app.get('/profile', authenticate, (req, res) => {
   res.render('profile.hbs', {
     user: req.user
   })
 })
 
 app.get('/edit_profile', authenticate, (req, res) => {
-  req.user.picture = req.user.facebook && req.user.facebook.picture.data.url || req.user.twitter && req.user.twitter.photos[0].value || '';
   res.render('edit_profile.hbs', {
     user: req.user
   })
 })
 
+app.post('/img_upload', authenticate, (req, res) => {
+  uploadCloudinary(req.body.blah, req.user._id)
+    .then(val => {
+      return User.findOneAndUpdate({
+        _id: req.user._id
+      }, {
+        cloudinary: val,
+        picture: val.url
+      }, {
+        new: true
+      });
+    })
+    .then(val => res.status(200).send({
+      picture: val.picture
+    }))
+    .catch(e => {
+      console.log(e);
+      res.status(300).send(e)
+    });
+
+})
+
 app.post('/edit_profile', authenticate, (req, res) => {
-  console.log(req.body);
+  // if password does not match give error
+
+  if (req.body.password != req.body.password2) {
+    req.flash(
+      'error_msg',
+      `Sorry passwords do not match.`
+    );
+    return res.redirect('/edit_profile');
+  }
+
+  bcrypt.genSalt(10, (err, salt) => {
+    bcrypt.hash(req.body.password, salt, (err, hash) => {
+      if (err) throw err;
+      User.findOneAndUpdate({
+          _id: req.user._id
+        }, {
+          img_url: req.body.img_url,
+          name: req.body.name,
+          email: req.body.email,
+          password: hash,
+        }, {
+          new: true
+        }).then(val => {
+          req.flash(
+            'success_msg',
+            `Great ${val.name} ! Your profile has been updated.`
+          );
+          res.redirect('/profile')
+        })
+        .catch(err => {
+          req.flash(
+            'error_msg',
+            `Sorry passwords do not match.`
+          );
+          return res.redirect('/edit_profile');
+        });
+    });
+  });
 })
 
 app.get('/discussions', authenticate, (req, res) => {
@@ -464,18 +568,18 @@ app.post('/wash_events', authenticate, (req, res) => {
   Events.remove({}).then(val => res.status(200).send(val)).catch(e => res.status(400).send(e));
 })
 
-app.get('/deleteTopicSuper', authenticate, (req,res) => {
-Topics.deleteOne({
-  "_id": req.query.id,
-}).then(val => {
-  console.log(val);
-  if (val.n == 0) return Promise.reject('Failed to delete this topic');
-  req.flash('success_msg','successfully deleted this topic');
-  return res.redirect('/admin');
-}).catch(e => {
-  req.flash('error_msg',JSON.stringify(e));
-  return res.redirect('/admin');
-})
+app.get('/deleteTopicSuper', authenticate, (req, res) => {
+  Topics.deleteOne({
+    "_id": req.query.id,
+  }).then(val => {
+    console.log(val);
+    if (val.n == 0) return Promise.reject('Failed to delete this topic');
+    req.flash('success_msg', 'successfully deleted this topic');
+    return res.redirect('/admin');
+  }).catch(e => {
+    req.flash('error_msg', JSON.stringify(e));
+    return res.redirect('/admin');
+  })
 })
 
 var port = process.env.PORT || 3000;

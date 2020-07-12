@@ -10,9 +10,17 @@
       {{>navbar}}
     </nav>
     <div class="container">
+
+      <p>Skip - {{skip}}, Count - {{count}}</p>
+      {{#if (moreThan skip 0)}}
+      <a href="/events?skip={{sub skip 10}}">Prev</a>
+      {{/if}}
+      {{#if (moreThan count (add 10 skip))}}
+      <a href="/events?skip={{add 10 skip}}">Next</a>
+      {{/if}}
       {{#each val}}
         <div class="card">
-          <h1>{{inc @index}} - {{this.event.summary}}</h1>
+          <h1>{{add (inc @index) ../skip}} - {{this.event.summary}}</h1>
           <p>Start - {{this.event.start.dateTime}}</p>
           <p>Ends - {{this.event.end.dateTime}}</p>
           <p>Location - {{this.event.location}}</p>

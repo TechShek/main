@@ -30,6 +30,7 @@
           {{{this.topic.post}}}
         </div>
         {{#if (match this.topic.user ../user._id)}}
+        <a href="/showtopic?id={{this.topic.id}}">Open</a>
         <a href="/edittopic?id={{this.topic.id}}">Edit</a>
         <a href="/deletetopic?id={{this.topic.id}}">Delete</a>
         {{/if}}

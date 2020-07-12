@@ -1,39 +1,97 @@
 <!DOCTYPE html>
 <html lang="en" dir="ltr">
-  <head>
-    <meta charset="utf-8">
-    <title>Edit Profile</title>
-    {{> headers}}
-  </head>
-  <body>
-    <nav>
-      {{> navbar}}
-    </nav>
-    <div class="container">
-      <form class="" action="/edit_profile" method="post">
 
-        <label for="img">Image URL</label>
-        <input type="text" name="img" value="{{user.picture}}">
+<head>
+  <meta charset="utf-8">
+  <title>Edit Profile</title>
+  {{> headers}}
+</head>
 
-        Or
+<body>
+  <nav>
+    {{> navbar}}
+  </nav>
+  <div class="container">
 
-        <label for="img_upload">Upload Image</label>
-        <input type="file" name="img_upload" value="">
+    <p>{{error_msg}}</p>
+    <p>{{success_msg}}</p>
 
-        <label for="name">Name</label>
-        <input type="text" name="name" value="{{user.name}}">
+    <img id="blah" src="{{user.picture}}" alt="">
 
-        <label for="email">Email</label>
-        <input type="email" name="email" value="{{user.email}}">
+    <form class="" action="/edit_profile" method="post">
 
-        <label for="password">Password</label>
-        <input type="password" name="password" value="123334" placeholder="Enter the password here">
+      <label for="img_url">Image URL</label>
+      <input type="text" name="img_url" value="{{user.picture}}" required>
 
-        <label for="password2">Confirm Password</label>
-        <input type="password" name="password2" value="123334" placeholder="Re-enter your password">
+      Or
 
-        <button type="submit" name="button">Submit</button>
-      </form>
-    </div>
-  </body>
+      <label id="img_label" for="img">Upload Image</label>
+      <input class="" type="file" id="img" name="img" accept="image/*" onchange="readURL(this);">
+
+      <label for="name">Name</label>
+      <input type="text" name="name" value="{{user.name}}" required>
+
+      <label for="email">Email</label>
+      <input type="email" name="email" value="{{user.email}}" required>
+
+      <label for="password">Password</label>
+      <input type="password" name="password" value="123334" placeholder="Enter the password here" required>
+
+      <label for="password2">Confirm Password</label>
+      <input type="password" name="password2" value="123334" placeholder="Re-enter your password" required>
+
+      <button type="submit" name="button">Submit</button>
+    </form>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+
+  <script type="text/javascript">
+    function readURL(input) {
+      if (input.files && input.files[0]) {
+        var reader = new FileReader();
+
+        reader.onload = function(e) {
+          $('#blah')
+            .attr('src', e.target.result);
+          uploadCloudinary();
+        };
+
+        reader.readAsDataURL(input.files[0]);
+      }
+    }
+
+    function uploadCloudinary() {
+      let data = {
+        blah: $('#blah').attr('src'),
+      }
+
+      // return console.log(data);
+      $('#img_label').html('Saving image...');
+
+      // now save everything in the query to mongo
+
+      data = JSON.stringify(data);
+
+      $.ajax({
+        url: '/img_upload',
+        type: 'post',
+        data,
+        headers: {
+          'content-type': 'application/json',
+        }
+      }).done((msg) => {
+        console.log(msg);
+        $('#img_label').html('Image saved.');
+        $("[name=img_url]").val(msg.picture);
+      }).fail((e) => {
+        $('#img_label').html(`Error: ${e.responseText}`);
+        console.log(e);
+      });
+    }
+
+
+  </script>
+</body>
+
 </html>

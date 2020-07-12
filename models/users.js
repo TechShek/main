@@ -13,7 +13,9 @@ var UsersSchema = new mongoose.Schema({
   },
   email: {
     type: String,
-    minlength: 3,
+  },
+  picture: {
+    type: String
   },
   password: {
     type: String,
@@ -25,6 +27,9 @@ var UsersSchema = new mongoose.Schema({
     type: Object
   },
   twitter: {
+    type: Object
+  },
+  cloudinary: {
     type: Object
   }
 });
