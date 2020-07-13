@@ -5,8 +5,7 @@ const session = require('express-session');
 
 var UsersSchema = new mongoose.Schema({
   name: {
-    type: String,
-    minlength: 3
+    type: String
   },
   username: {
     type: String
@@ -27,6 +26,9 @@ var UsersSchema = new mongoose.Schema({
     type: Object
   },
   twitter: {
+    type: Object
+  },
+  google: {
     type: Object
   },
   cloudinary: {

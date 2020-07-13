@@ -104,7 +104,10 @@ hbs.registerHelper("break", function(value, options) {
 })
 
 hbs.registerHelper("match", function(value1, value2, options) {
-  console.log({value1,value2});
+  console.log({
+    value1,
+    value2
+  });
   if (!value1 || !value2) return false;
   return value1.toString() == value2.toString();
 });
@@ -280,7 +283,7 @@ app.get('/auth/facebook/callback',
     failureFlash: true
   }));
 
-// FACEBOOK LOGIN ROUTE ==========
+// TWITTER LOGIN ROUTE ==========
 
 app.get('/auth/twitter',
   passport.authenticate('twitter', {
@@ -295,6 +298,23 @@ app.get('/auth/twitter/callback',
     successRedirect: '/home',
     failureFlash: true
   }))
+
+// TWITTER LOGIN ROUTE ==========
+
+app.get('/auth/google',
+  passport.authenticate('google', {
+    scope: [
+        'https://www.googleapis.com/auth/userinfo.profile',
+        'https://www.googleapis.com/auth/userinfo.email'
+    ]
+  }));
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', {
+    failureRedirect: '/login',
+    successRedirect: '/home',
+    failureFlash: true
+  }));
 
 // NORMAL ROUTES ============
 
@@ -395,20 +415,24 @@ app.get('/deletetopic', authenticate, (req, res) => {
   }))
 })
 
-app.get('/showtopic', authenticate, (req,res) => {
-  Topics.findOne({"topic.id": req.query.id}).lean()
-  .then(val => {
-    req.topic = val;
-    req.topic.created = new Date(Number(val.topic.id)).toString();
-    return User.findOne({_id: val.topic.user})
-  })
-  .then(val => res.status(200).render('showtopic',{
-    data: req.topic,
-    user: val
-  }))
-  .catch(e => res.status(200).render('error.hbs', {
-    error: e
-  }))
+app.get('/showtopic', authenticate, (req, res) => {
+  Topics.findOne({
+      "topic.id": req.query.id
+    }).lean()
+    .then(val => {
+      req.topic = val;
+      req.topic.created = new Date(Number(val.topic.id)).toString();
+      return User.findOne({
+        _id: val.topic.user
+      })
+    })
+    .then(val => res.status(200).render('showtopic', {
+      data: req.topic,
+      user: val
+    }))
+    .catch(e => res.status(200).render('error.hbs', {
+      error: e
+    }))
 })
 
 app.get('/profile', authenticate, (req, res) => {

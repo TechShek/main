@@ -2,6 +2,7 @@ var passport = require('passport'),
   LocalStrategy = require('passport-local').Strategy,
   FacebookStrategy = require('passport-facebook').Strategy,
   TwitterStrategy = require('passport-twitter').Strategy,
+  GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
   {
     User
   } = require('../models/users'),
@@ -22,10 +23,14 @@ passport.use(new LocalStrategy(
         });
       }
       // Match password
-      if (!user.password) return done(null, false, {message: `You have already signed up using social media login.`})
+      if (!user.password) return done(null, false, {
+        message: `You have already signed up using social media login.`
+      })
       bcrypt.compare(password, user.password, (err, isMatch) => {
         console.log(err);
-        if (err) return done(null, false, {message: 'Something wrong.'});
+        if (err) return done(null, false, {
+          message: 'Something wrong.'
+        });
         if (isMatch) {
           return done(null, user);
         } else {
@@ -41,7 +46,7 @@ passport.use(new LocalStrategy(
 passport.use(new FacebookStrategy({
     clientID: process.env.FACEBOOK_APP_ID,
     clientSecret: process.env.FACEBOOK_APP_SECRET,
-    callbackURL: process.env.URL_LINK+"/auth/facebook/callback",
+    callbackURL: process.env.URL_LINK + "/auth/facebook/callback",
   },
   function(accessToken, refreshToken, profile, done) {
 
@@ -93,7 +98,7 @@ passport.use(new FacebookStrategy({
 passport.use(new TwitterStrategy({
     consumerKey: process.env.TWITTER_CONSUMER_KEY,
     consumerSecret: process.env.TWITTER_CONSUMER_SECRET,
-    callbackURL: process.env.URL_LINK+"/auth/twitter/callback",
+    callbackURL: process.env.URL_LINK + "/auth/twitter/callback",
     userProfileURL: "https://api.twitter.com/1.1/account/verify_credentials.json?include_email=true",
   },
   function(token, tokenSecret, body, done) {
@@ -118,6 +123,45 @@ passport.use(new TwitterStrategy({
           picture: body.photos[0].value,
           //now in the future searching on User.findOne({'facebook.id': profile.id } will match because of this next line
           twitter: body
+        });
+        user.save(function(err) {
+          if (err) console.log(err);
+          return done(err, user);
+        });
+      } else {
+        //found user. Return
+        return done(err, user);
+      }
+    });
+  }
+));
+
+passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.URL_LINK + "/auth/google/callback",
+  },
+  function(accessToken, refreshToken, profile, done) {
+    console.log(profile);
+
+    User.findOne({
+      'google.id': profile.id
+    }, function(err, user) {
+
+      if (err) {
+        console.log(err);
+        return done(err);
+      }
+      //No user was found... so create a new user with values from Facebook (all the profile. stuff)
+      if (!user) {
+        user = new User({
+          name: profile.displayName,
+          email: profile.emails && profile.emails[0].value || '',
+          username: profile.displayName,
+          provider: 'google',
+          picture: profile.photos[0].value,
+          //now in the future searching on User.findOne({'facebook.id': profile.id } will match because of this next line
+          google: profile
         });
         user.save(function(err) {
           if (err) console.log(err);
