@@ -1,3 +1,7 @@
+Hi @Ashir & @Saeed bhai, hope you are doing well. :)
+
+Can we build our own techshek and start something on top of it. Looking for suggestions and inputs. 
+
 # Completed
 
 - Basic sign up / in manually or using facebook and twitter
